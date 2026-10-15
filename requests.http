@@ -1,0 +1,686 @@
+@host = http://localhost:8090
+@staff = 1
+
+### Перевірка, що застосунок живий
+GET {{host}}/api/ping
+
+### Усі філії з кількістю працівників
+GET {{host}}/api/branches
+
+### Одна філія
+GET {{host}}/api/branches/1
+
+### Додати філію
+POST {{host}}/api/branches
+Content-Type: application/json
+X-Staff-Id: {{staff}}
+
+{
+  "name": "Оболонська",
+  "city": "Київ",
+  "address": "просп. Оболонський, 1",
+  "opensAt": "09:00",
+  "closesAt": "22:00"
+}
+
+### Змінити дані філії
+PUT {{host}}/api/branches/3
+Content-Type: application/json
+X-Staff-Id: {{staff}}
+
+{
+  "name": "Лівобережна",
+  "city": "Київ",
+  "address": "просп. Соборності, 7",
+  "opensAt": "08:00",
+  "closesAt": "22:00"
+}
+
+### Посади з кількістю працівників
+GET {{host}}/api/branches/positions
+
+### Додати посаду
+POST {{host}}/api/branches/positions
+Content-Type: application/json
+X-Staff-Id: {{staff}}
+
+{
+  "title": "Старший бариста",
+  "baseRate": 25000
+}
+
+### Усі активні працівники
+GET {{host}}/api/staff
+
+### Працівники однієї філії
+GET {{host}}/api/staff?branchId=1
+
+### Пошук працівника за частиною прізвища (індекс GIN)
+GET {{host}}/api/staff?name=Коваленко
+
+### Один працівник
+GET {{host}}/api/staff/3
+
+### Прийняти на роботу
+POST {{host}}/api/staff
+Content-Type: application/json
+X-Staff-Id: {{staff}}
+
+{
+  "branchId": 1,
+  "positionId": 2,
+  "fullName": "Кравчук Олена",
+  "phone": "+380671000011",
+  "hiredOn": "2026-10-01"
+}
+
+### Змінити посаду і телефон
+PUT {{host}}/api/staff/10
+Content-Type: application/json
+X-Staff-Id: {{staff}}
+
+{
+  "positionId": 2,
+  "phone": "+380671000010"
+}
+
+### Перевести до іншої філії
+PUT {{host}}/api/staff/10/branch
+Content-Type: application/json
+X-Staff-Id: {{staff}}
+
+{
+  "branchId": 2
+}
+
+### Звільнити (soft delete, рядок лишається в таблиці)
+DELETE {{host}}/api/staff/10
+X-Staff-Id: {{staff}}
+
+### Поновити звільненого
+POST {{host}}/api/staff/10/restore
+X-Staff-Id: {{staff}}
+
+### Графік змін
+GET {{host}}/api/staff/shifts
+
+### Зміни одного працівника
+GET {{host}}/api/staff/shifts?staffId=1
+
+### Поставити зміну
+POST {{host}}/api/staff/shifts
+Content-Type: application/json
+X-Staff-Id: {{staff}}
+
+{
+  "staffId": 3,
+  "startsAt": "2026-12-01T08:00:00",
+  "endsAt": "2026-12-01T20:00:00"
+}
+
+### Зміна, що перетинається з наявною: тригер поверне 409
+POST {{host}}/api/staff/shifts
+Content-Type: application/json
+X-Staff-Id: {{staff}}
+
+{
+  "staffId": 3,
+  "startsAt": "2026-12-01T18:00:00",
+  "endsAt": "2026-12-01T23:00:00"
+}
+
+### Чи працює людина в заданий проміжок
+GET {{host}}/api/staff/1/on-shift?from={{$localDatetime iso8601}}&to={{$localDatetime iso8601}}
+
+### Усі активні клієнти
+GET {{host}}/api/clients
+
+### Пошук клієнта за частиною імені
+GET {{host}}/api/clients?name=Гриценко
+
+### Один клієнт
+GET {{host}}/api/clients/1
+
+### Скільки клієнт витратив (користувацька функція)
+GET {{host}}/api/clients/1/spent
+
+### Новий клієнт
+POST {{host}}/api/clients
+Content-Type: application/json
+X-Staff-Id: {{staff}}
+
+{
+  "fullName": "Мельник Андрій",
+  "phone": "+380501110007",
+  "email": "andrii@example.com"
+}
+
+### Змінити клієнта
+PUT {{host}}/api/clients/3
+Content-Type: application/json
+X-Staff-Id: {{staff}}
+
+{
+  "fullName": "Савченко Дмитро",
+  "phone": "+380501110003",
+  "email": "dmytro@example.com"
+}
+
+### Видалити клієнта (soft delete)
+DELETE {{host}}/api/clients/6
+X-Staff-Id: {{staff}}
+
+### Після видалення клієнт не віддається: 404
+GET {{host}}/api/clients/6
+
+### Поновити клієнта
+POST {{host}}/api/clients/6/restore
+X-Staff-Id: {{staff}}
+
+### Адреси клієнта
+GET {{host}}/api/clients/1/addresses
+
+### Додати адресу (тригер зніме прапорець з попередньої основної)
+POST {{host}}/api/clients/1/addresses
+Content-Type: application/json
+X-Staff-Id: {{staff}}
+
+{
+  "street": "вул. Василькiвська",
+  "building": "30",
+  "apartment": "7",
+  "asDefault": true
+}
+
+### Зробити адресу основною
+PUT {{host}}/api/clients/addresses/2/default
+X-Staff-Id: {{staff}}
+
+### Картка лояльності клієнта
+GET {{host}}/api/clients/1/card
+
+### Випустити картку
+POST {{host}}/api/clients/3/card
+X-Staff-Id: {{staff}}
+
+### Нарахувати або списати бали вручну
+PUT {{host}}/api/clients/1/card/points
+Content-Type: application/json
+X-Staff-Id: {{staff}}
+
+{
+  "points": 500
+}
+
+### Розділи меню
+GET {{host}}/api/menu/sections
+
+### Додати розділ
+POST {{host}}/api/menu/sections
+Content-Type: application/json
+X-Staff-Id: {{staff}}
+
+{
+  "name": "Сезонне",
+  "sortOrder": 60
+}
+
+### Усе активне меню
+GET {{host}}/api/menu
+
+### Меню одного розділу
+GET {{host}}/api/menu?sectionId=1
+
+### Пошук за частиною назви (індекс GIN)
+GET {{host}}/api/menu?title=лате
+
+### Одна позиція
+GET {{host}}/api/menu/4
+
+### Додати позицію
+POST {{host}}/api/menu
+Content-Type: application/json
+X-Staff-Id: {{staff}}
+
+{
+  "sectionId": 4,
+  "title": "Медовик",
+  "weightG": 160,
+  "price": 115
+}
+
+### Змінити позицію
+PUT {{host}}/api/menu/9
+Content-Type: application/json
+X-Staff-Id: {{staff}}
+
+{
+  "sectionId": 4,
+  "title": "Чізкейк",
+  "weightG": 160,
+  "price": 135
+}
+
+### Змінити лише ціну
+PUT {{host}}/api/menu/1/price
+Content-Type: application/json
+X-Staff-Id: {{staff}}
+
+{
+  "price": 50
+}
+
+### Зняти позицію з продажу (soft delete)
+DELETE {{host}}/api/menu/12
+X-Staff-Id: {{staff}}
+
+### Повернути позицію
+POST {{host}}/api/menu/12/restore
+X-Staff-Id: {{staff}}
+
+### Технологічна карта позиції
+GET {{host}}/api/menu/2/tech-card
+
+### Задати витрату продукту на порцію
+PUT {{host}}/api/menu/2/tech-card
+Content-Type: application/json
+X-Staff-Id: {{staff}}
+
+{
+  "productId": 10,
+  "amount": 0.010
+}
+
+### Усі активні продукти
+GET {{host}}/api/products
+
+### Пошук продукту
+GET {{host}}/api/products?name=молоко
+
+### Один продукт
+GET {{host}}/api/products/1
+
+### Додати продукт
+POST {{host}}/api/products
+Content-Type: application/json
+X-Staff-Id: {{staff}}
+
+{
+  "name": "Сироп карамельний",
+  "unit": "l"
+}
+
+### Змінити продукт
+PUT {{host}}/api/products/12
+Content-Type: application/json
+X-Staff-Id: {{staff}}
+
+{
+  "name": "Ягоди заморожені",
+  "unit": "kg"
+}
+
+### Списати продукт з довідника (soft delete)
+DELETE {{host}}/api/products/12
+X-Staff-Id: {{staff}}
+
+### Повернути продукт
+POST {{host}}/api/products/12/restore
+X-Staff-Id: {{staff}}
+
+### Усі промокоди
+GET {{host}}/api/promos
+
+### Лише діючі промокоди
+GET {{host}}/api/promos?onlyValid=true
+
+### Один промокод
+GET {{host}}/api/promos/1
+
+### Додати промокод
+POST {{host}}/api/promos
+Content-Type: application/json
+X-Staff-Id: {{staff}}
+
+{
+  "code": "AUTUMN20",
+  "discountPercent": 20,
+  "validTo": "2027-01-31"
+}
+
+### Змінити промокод
+PUT {{host}}/api/promos/2
+Content-Type: application/json
+X-Staff-Id: {{staff}}
+
+{
+  "discountPercent": 7,
+  "validTo": "2027-03-01"
+}
+
+### Видалити промокод (soft delete)
+DELETE {{host}}/api/promos/3
+X-Staff-Id: {{staff}}
+
+### Поновити промокод
+POST {{host}}/api/promos/3/restore
+X-Staff-Id: {{staff}}
+
+### Постачальники
+GET {{host}}/api/supply/suppliers
+
+### Додати постачальника
+POST {{host}}/api/supply/suppliers
+Content-Type: application/json
+X-Staff-Id: {{staff}}
+
+{
+  "name": "ТОВ Солодкий Світ",
+  "contact": "+380445550004"
+}
+
+### Накладні
+GET {{host}}/api/supply/purchases
+
+### Накладні однієї філії
+GET {{host}}/api/supply/purchases?branchId=1
+
+### Одна накладна
+GET {{host}}/api/supply/purchases/1
+
+### Позиції накладної
+GET {{host}}/api/supply/purchases/1/lines
+
+### Створити накладну
+POST {{host}}/api/supply/purchases
+Content-Type: application/json
+X-Staff-Id: {{staff}}
+
+{
+  "branchId": 1,
+  "supplierId": 1
+}
+
+### Додати позицію до накладної
+POST {{host}}/api/supply/purchases/3/lines
+Content-Type: application/json
+X-Staff-Id: {{staff}}
+
+{
+  "productId": 1,
+  "quantity": 25,
+  "unitCost": 470
+}
+
+### Провести накладну: залишки складу зростуть
+POST {{host}}/api/supply/purchases/3/receive
+X-Staff-Id: {{staff}}
+
+### Скасувати чернетку накладної
+POST {{host}}/api/supply/purchases/2/cancel
+X-Staff-Id: {{staff}}
+
+### Залишки по всіх філіях
+GET {{host}}/api/stock
+
+### Залишки однієї філії
+GET {{host}}/api/stock?branchId=1
+
+### Продукти, яких лишилось мало
+GET {{host}}/api/stock/low
+
+### Залишок конкретного продукту (користувацька функція)
+GET {{host}}/api/stock/balance?branchId=1&productId=1
+
+### Ручне коригування залишку
+POST {{host}}/api/stock/movements
+Content-Type: application/json
+X-Staff-Id: {{staff}}
+
+{
+  "branchId": 1,
+  "productId": 5,
+  "delta": -12,
+  "reason": "WRITE_OFF"
+}
+
+### Усі замовлення
+GET {{host}}/api/orders
+
+### Замовлення за статусом
+GET {{host}}/api/orders?status=CLOSED
+
+### Замовлення за каналом продажу
+GET {{host}}/api/orders?channel=DELIVERY
+
+### Картка замовлення: шапка, позиції, оплати
+GET {{host}}/api/orders/1
+
+### Лише позиції замовлення
+GET {{host}}/api/orders/1/lines
+
+### Сума без знижки (користувацька функція)
+GET {{host}}/api/orders/1/amount
+
+### Відкрити замовлення
+POST {{host}}/api/orders
+Content-Type: application/json
+X-Staff-Id: 3
+
+{
+  "branchId": 1,
+  "clientId": 4,
+  "cashierId": 3,
+  "channel": "HALL"
+}
+
+### Додати позицію: тригер перерахує суму замовлення
+POST {{host}}/api/orders/3/lines
+Content-Type: application/json
+X-Staff-Id: 3
+
+{
+  "menuItemId": 3,
+  "quantity": 2
+}
+
+### Прибрати позицію
+DELETE {{host}}/api/orders/lines/5
+X-Staff-Id: 3
+
+### Застосувати промокод
+PUT {{host}}/api/orders/3/promo
+Content-Type: application/json
+X-Staff-Id: 3
+
+{
+  "code": "WELCOME10"
+}
+
+### Прострочений промокод: 409
+PUT {{host}}/api/orders/3/promo
+Content-Type: application/json
+X-Staff-Id: 3
+
+{
+  "code": "OLDPROMO"
+}
+
+### Оплатити замовлення: тригер нарахує бали клієнту
+POST {{host}}/api/orders/3/payment
+Content-Type: application/json
+X-Staff-Id: 3
+
+{
+  "method": "CARD"
+}
+
+### Закрити замовлення: перевірка і списання продуктів зі складу
+POST {{host}}/api/orders/3/close
+X-Staff-Id: 3
+
+### Скасувати замовлення
+POST {{host}}/api/orders/3/cancel
+X-Staff-Id: 3
+
+### Усі доставки
+GET {{host}}/api/deliveries
+
+### Доставки, що ще в дорозі
+GET {{host}}/api/deliveries?pending=true
+
+### Одна доставка
+GET {{host}}/api/deliveries/1
+
+### Оформити доставку для замовлення
+POST {{host}}/api/deliveries/orders/2
+Content-Type: application/json
+X-Staff-Id: {{staff}}
+
+{
+  "addressId": 3
+}
+
+### Призначити курєра
+PUT {{host}}/api/deliveries/1/courier
+Content-Type: application/json
+X-Staff-Id: {{staff}}
+
+{
+  "courierId": 2
+}
+
+### Відмітити доставку як виконану
+POST {{host}}/api/deliveries/1/complete
+X-Staff-Id: {{staff}}
+
+### Курєри зі статистикою
+GET {{host}}/api/deliveries/couriers
+
+### Додати курєра
+POST {{host}}/api/deliveries/couriers
+Content-Type: application/json
+X-Staff-Id: {{staff}}
+
+{
+  "staffId": 2,
+  "vehicle": "Авто"
+}
+
+### Вільні курєри на проміжок часу (функція + індекс GiST по змінах)
+GET {{host}}/api/deliveries/couriers/free?from={{$localDatetime iso8601}}&to={{$localDatetime iso8601}}
+
+### Відгуки
+GET {{host}}/api/reviews
+
+### Відгуки з оцінкою від 4
+GET {{host}}/api/reviews?minRating=4
+
+### Залишити відгук до оплаченого замовлення
+POST {{host}}/api/reviews
+Content-Type: application/json
+X-Staff-Id: {{staff}}
+
+{
+  "orderId": 1,
+  "rating": 5,
+  "comment": "Швидко обслужили"
+}
+
+### Виручка по днях і філіях
+GET {{host}}/api/reports/revenue
+
+### Виручка однієї філії
+GET {{host}}/api/reports/revenue?branchId=1
+
+### Найпопулярніші позиції меню
+GET {{host}}/api/reports/top-menu
+
+### Завантаженість курєрів
+GET {{host}}/api/reports/couriers
+
+### Що треба закупити
+GET {{host}}/api/reports/low-stock
+
+### Повний продаж однією транзакцією: клієнт, замовлення, позиції, промокод, оплата, списання складу
+POST {{host}}/api/checkout
+Content-Type: application/json
+X-Staff-Id: 3
+
+{
+  "branchId": 1,
+  "cashierId": 3,
+  "clientId": 1,
+  "channel": "HALL",
+  "items": [
+    { "menuItemId": 2, "quantity": 2 },
+    { "menuItemId": 4, "quantity": 1 }
+  ],
+  "promoCode": "WELCOME10",
+  "paymentMethod": "CARD"
+}
+
+### Те саме з доставкою: додатково створюється доставка і призначається вільний курєр
+POST {{host}}/api/checkout
+Content-Type: application/json
+X-Staff-Id: 5
+
+{
+  "branchId": 2,
+  "cashierId": 5,
+  "clientId": 2,
+  "channel": "DELIVERY",
+  "items": [
+    { "menuItemId": 7, "quantity": 1 },
+    { "menuItemId": 11, "quantity": 2 }
+  ],
+  "paymentMethod": "ONLINE"
+}
+
+### Продаж новому клієнту з новою адресою доставки
+POST {{host}}/api/checkout
+Content-Type: application/json
+X-Staff-Id: 5
+
+{
+  "branchId": 2,
+  "cashierId": 5,
+  "clientName": "Левченко Марина",
+  "clientPhone": "+380509998877",
+  "channel": "DELIVERY",
+  "items": [
+    { "menuItemId": 3, "quantity": 2 }
+  ],
+  "paymentMethod": "CARD",
+  "street": "вул. Хорива",
+  "building": "18",
+  "apartment": "4"
+}
+
+### Замовлення на кількість, якої немає на складі: 409 і відкат усієї транзакції
+POST {{host}}/api/checkout
+Content-Type: application/json
+X-Staff-Id: 8
+
+{
+  "branchId": 3,
+  "cashierId": 8,
+  "channel": "TAKEAWAY",
+  "items": [
+    { "menuItemId": 8, "quantity": 500 }
+  ],
+  "paymentMethod": "CASH"
+}
+
+### Некоректне тіло запиту: 400 з переліком полів
+POST {{host}}/api/checkout
+Content-Type: application/json
+X-Staff-Id: 3
+
+{
+  "branchId": 0,
+  "cashierId": 3,
+  "channel": "TELEPORT",
+  "items": [],
+  "paymentMethod": "BTC"
+}
